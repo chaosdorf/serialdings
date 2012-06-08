@@ -3,6 +3,7 @@
 use strict;
 use warnings;
 use 5.010;
+use Data::Dumper;
 use Device::SerialPort;
 use Time::HiRes 'sleep';
 
@@ -16,7 +17,7 @@ $port->databits(8);
 $port->stopbits(1);
 $port->handshake("none");
 
-for my $i (0 .. 255) {
+for my $i ($ARGV[0]) {
 	my @bytes = (
 		1,
 		1,
@@ -24,8 +25,13 @@ for my $i (0 .. 255) {
 		0x01 ^ 0x01 ^ $i
 	);
 	my $cnt = $port->write( join('',  map { chr($_) } @bytes ) );
-	printf("%8b " x @bytes . "%d\n", @bytes, $cnt);
-	sleep(0.1);
+	printf("%08b " x @bytes . "%d\n", @bytes, $cnt);
+	sleep(5);
+	for (1 .. 4) {
+		my ($cnt, $saw) = $port->read(1);
+		printf(" :: %d %s ", $cnt, unpack('b*', $saw));
+	}
+	say "";
 }
 
 #for my $i (0 .. 255) {
