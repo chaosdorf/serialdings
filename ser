@@ -11,43 +11,31 @@ our $VERSION = '0.0';
 
 my $port = Device::SerialPort->new("/dev/ttyUSB0", 0);
 
-$port->baudrate(9600);
+$port->baudrate(19200);
 $port->parity("none");
 $port->databits(8);
 $port->stopbits(1);
 $port->handshake("none");
 
-for my $i ($ARGV[0]) {
-	my @bytes = (
-		1,
-		1,
-		$i,
-		0x01 ^ 0x01 ^ $i
-	);
-	my $cnt = $port->write( join('',  map { chr($_) } @bytes ) );
-	printf("%08b " x @bytes . "%d\n", @bytes, $cnt);
-	sleep(5);
-	for (1 .. 4) {
-		my ($cnt, $saw) = $port->read(1);
-		printf(" :: %d %s ", $cnt, unpack('b*', $saw));
-	}
-	say "";
-}
+#
+# USAGE
+#
+# perl ser 1 <card> <state>
+#
+# card: Karten-ID (master == 1, weitere nach Jumper (2, 3, ...))
+# state: Relais-Status, binär. 0 = alle aus, 255 = alle an, etc.
+#
 
-#for my $i (0 .. 255) {
-#for my $j (1 .. 255) {
-#for my $k (0 .. 255) {
-#for my $l (0 .. 255) {
-#	my $cnt = $port->write(chr($i) . chr($j) . chr($k) . chr($l));
-#	printf("%8b %8b %8b %8b %d\n",
-#		$i, $j, $k, $l,
-#		$cnt
-#	);
-#	sleep(0.0001);
-#}
-#}
-#}
-#}
+my @bytes = @ARGV;
+$bytes[3] = int($bytes[0]) ^ int($bytes[1]) ^ int($bytes[2]);
+my $cnt = $port->write( join('',  map { chr($_) } @bytes ) );
+printf("%08b " x @bytes . "%d\n", @bytes, $cnt);
+sleep(5);
+for (1 .. 4) {
+	my ($cnt, $saw) = $port->read(1);
+	printf(" :: %d %s ", $cnt, unpack('b*', $saw));
+}
+say "";
 
 
 __END__
